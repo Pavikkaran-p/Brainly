@@ -15,6 +15,6 @@ export function connectToDb() {
 
 process.on('SIGINT', async () => {
   await mongoose.connection.close();
-  console.log('MongoDB connection closed on application termination');
+  console.log('MongoDB connection killed on application termination');
   process.exit(0);
 });
