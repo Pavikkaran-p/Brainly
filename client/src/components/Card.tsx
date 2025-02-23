@@ -1,5 +1,5 @@
 import { Tweet } from "react-tweet"
-import { ShareIcon } from "../../icons/ShareIcon"
+import { ShareIcon } from "../icons/ShareIcon"
 
 interface CardProps{
   title : string;

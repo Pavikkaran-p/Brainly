@@ -31,7 +31,7 @@ app.post("/api/v1/auth/signup", async (req, res) => {
             message:"User signed up"
         })
     } catch (error) {
-        console.log("Already created")
+        console.log("Already created",error)
         res.json({
             message: "User already exists"
         })
@@ -132,7 +132,7 @@ app.post("/api/v1/brain/share",authMiddleware,async (req, res) => {
             })
             if(existing_link){
                 res.json({
-                    hash:"/api/v1/share/" + existing_link.hash,
+                    hash:"/share/" + existing_link.hash,
                     message: "Updated sharable link"
                 })
                 return

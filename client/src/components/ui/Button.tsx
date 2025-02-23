@@ -6,6 +6,9 @@ interface ButtonProps {
     startIcon?: ReactElement;
     endIcon?: ReactElement;
     variant: "primary" | "secondary";
+    onClick?: () => void;
+    fullWidth?: string;
+    loading?: string;
 }
 
 const sizeStyles = {
@@ -22,9 +25,9 @@ const variantStyles = {
 
 const defaultStyles = `font-light mx-2`
 
-export function Button({text,size,startIcon,endIcon,variant}: ButtonProps) {
+export function Button({text,size,startIcon,endIcon,variant,onClick,fullWidth,loading}: ButtonProps) {
     // const Comp = props.startIcon;
-    return <button className={sizeStyles[size] + " " + variantStyles[variant] + defaultStyles}>
+    return <button onClick={onClick} className={sizeStyles[size] + " " + variantStyles[variant] + defaultStyles + `${fullWidth ? " w-full flex justify-center":""} ${ loading ? "opacity-70":"" }`}>
         <div className="flex items-center">
              {startIcon?startIcon:null}
             <div className="pl-2 pr-2">
