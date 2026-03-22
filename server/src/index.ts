@@ -9,6 +9,8 @@ import { authMiddleware } from "./middleware/auth.middleware.js"
 import { contentModel } from "./model/contentModel.js"
 import { LinkModel } from "./model/linkModel.js"
 import { random } from "./utils.js"
+import authRoutes from "./routes/auth.routes.js";
+import { asyncHandler } from "./utils/asyncHandler.js"
 dotenv.config()
 
 const app = express()
@@ -19,65 +21,24 @@ app.get("/", (req, res) => {
     res.send("Hello World")
 })
 
-app.post("/api/v1/auth/signup", async (req, res) => {
-    const username = req.body.username
-    const password = req.body.password
-    try {
-        await UserModel.create({
-            username: username,
-            password: password
-        })
-        res.json({
-            message:"User signed up"
-        })
-    } catch (error) {
-        console.log("Already created",error)
-        res.json({
-            message: "User already exists"
-        })
-    }
+app.use("/api/v1/auth", authRoutes)
 
-})
-
-app.post("/api/v1/auth/signin",async (req, res) => {
-    const username = req.body.username
-    const password = req.body.password
-    
-    const existingUser = await UserModel.findOne({
-        username: username,
-        password: password
-    })
-    if(existingUser){
-        const token = Jwt.sign({
-            // @ts-ignore
-            id:existingUser._id
-        },JWT_SECRET)
-        res.json({
-            token
-        })
-    }
-    else{
-        res.status(403).json({
-            message:"Please check credentials"
-        })
-    }
-})
-
-app.post("/api/v1/content", authMiddleware ,async (req, res) => {
+app.post("/api/v1/content", authMiddleware ,async (req:any, res:any) => {
     const link = req.body.link
     const type = req.body.type
-    if(!link || !type){
-        res.sendStatus(409)
+    const title = req.body.title
+    if (!link || !type) {
+        return res.sendStatus(409);
     }
     await contentModel.create({
         link,
         type,
-        // @ts-ignore
+        title,
         userId: req.userId,
         tags: []
     }).then(data =>
         res.json({
-            message: "Content added"
+            message: "Content added successfully"
         })
     ).catch(error => {
         console.log(error)
@@ -86,48 +47,63 @@ app.post("/api/v1/content", authMiddleware ,async (req, res) => {
     
 })
 
-app.get("/api/v1/content", authMiddleware ,async (req, res) => {
-    // @ts-ignore
-    const userId = req.userId
-    console.log(userId,"Id")
+app.get("/api/v1/content",authMiddleware, asyncHandler(async (req, res) => {
+    const userId = req.userId;
 
-    const contentData = await contentModel.find({
-        // @ts-ignore
-        userId : userId
-    }).populate("userId", "username")
-    .catch(error=>{
-        console.log(error)
-        res.sendStatus(404)
-    })
-    res.json({
-        content : contentData,
-        message : "Content fetched sucessfully"
-    })
-})
+    const contentData = await contentModel
+      .find({ userId })
+      .populate("userId", "username");
 
-app.delete("/api/v1/content", authMiddleware ,async (req, res) => {
-    const userId = req.body.userId
-    const contentId = req.body.contentId
-    if(!userId || !contentId)  res.status(404).send("Invalid UserId or contentId")
-    const contentData = await contentModel.deleteOne({
-        // @ts-ignore
-        contentId : contentId,
-        userId : userId
-    }).catch(error=> {
-        console.log(error)
-        res.status(400).send("Something went wrong")
-    })
     res.json({
-        message : "Content deleted sucessfully"
-    })
-})
+      content: contentData,
+      message: "Content fetched successfully",
+    });
+  })
+);
+
+app.delete("/api/v1/content/:contentId", authMiddleware, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const contentId = req.params.contentId;
+
+        if (!contentId) {
+            res.status(400).json({
+                message: "ContentId is required"
+            });
+            return;
+        }
+
+        const deleted = await contentModel.deleteOne({
+            _id: contentId,
+            userId: userId
+        });
+
+        if (deleted.deletedCount === 0) {
+            res.status(403).json({
+                message: "Not allowed or content not found"
+            });
+            return;
+        }
+
+        res.json({
+            message: "Content deleted successfully"
+        });
+        return;
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "Something went wrong"
+        });
+        return;
+    }
+});
 
 app.post("/api/v1/brain/share",authMiddleware,async (req, res) => {
     const share = req.body.share;
     if(share){
         try {
             const existing_link = await LinkModel.findOne({
-                // @ts-ignore
                 userId: req.userId
             })
             if(existing_link){
@@ -139,7 +115,6 @@ app.post("/api/v1/brain/share",authMiddleware,async (req, res) => {
             }
 
             const sharable_link = await LinkModel.create({
-                // @ts-ignore
                 userId:req.userId,
                 hash:random(10),
             })
@@ -154,7 +129,6 @@ app.post("/api/v1/brain/share",authMiddleware,async (req, res) => {
     }
     else{
         await LinkModel.deleteOne({
-            // @ts-ignore
             userId: req.userId
         })
         res.json({
@@ -168,7 +142,6 @@ app.get("/api/v1/brain/:shareLink",async (req, res) => {
         const hash = req.params.shareLink
         console.log(hash)
         const link = await LinkModel.findOne({
-            // @ts-ignore
             hash
         })
         console.log("Link",link)
@@ -202,8 +175,15 @@ app.get("/api/v1/brain/:shareLink",async (req, res) => {
     }
 })
 
-app.listen(port, () => {
-    connectToDb()
-    console.log(`Server is running on port ${port}`)
-    console.log("Brainly working fine")
-})
+const startServer = async () => {
+  try {
+    await connectToDb();
+    app.listen(port, () => {
+      console.log(`Server running on ${port}`);
+    });
+  } catch (err) {
+    console.error("DB connection failed", err);
+  }
+};
+
+startServer();

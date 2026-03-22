@@ -2,7 +2,6 @@ import mongoose from 'mongoose'
 import { MongoUri } from '../config/AppConfiguration.js'
 
 export function connectToDb() {
-  console.log(MongoUri,"0001")
   mongoose.connect(MongoUri)
   .then(() => {
     console.log('Connected to DB')
