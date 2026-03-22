@@ -7,8 +7,8 @@ interface ButtonProps {
     endIcon?: ReactElement;
     variant: "primary" | "secondary";
     onClick?: () => void;
-    fullWidth?: string;
-    loading?: string;
+    fullWidth?: boolean;
+    loading?: boolean;
 }
 
 const sizeStyles = {

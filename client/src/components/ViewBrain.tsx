@@ -10,7 +10,7 @@ const ViewBrain = () => {
   useEffect(() => {
     axios.get(BackendUrl+"/api/v1/brain/"+brainUrl,{
         headers:{
-          "Authorization": localStorage.getItem("token")
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
         }
       })
       .then((response)=>{

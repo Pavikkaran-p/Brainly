@@ -56,7 +56,7 @@ function DashBoard() {
                   share: true
                 },{
                   headers:{
-                    "Authorization": localStorage.getItem("token")
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
                   },
                   
                 })

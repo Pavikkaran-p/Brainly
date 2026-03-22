@@ -6,11 +6,13 @@ const useContent = () => {
   const [contents, setContents] = useState([])
   const [error, setError] = useState()
   console.log(error)
+  let token = localStorage.getItem("token");
   const refresh = async () =>{
     axios.get(BackendUrl+"/api/v1/content",{
-      headers:{
-        "Authorization": localStorage.getItem("token")
-      }
+
+    headers: {
+      Authorization: token ? `Bearer ${token}` : ""
+    }
     })
     .then((response)=>{
         setContents(response.data.content)
@@ -23,7 +25,7 @@ const useContent = () => {
     refresh()
     let interval = setInterval(() => {
       refresh()
-    }, 10 * 1000);
+    }, 30 * 1000);
     return () =>{
       clearInterval(interval)
     }
